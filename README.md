@@ -32,10 +32,11 @@ Ce projet peut constituer un exemple typique pour mettre en pratique des connais
 1.  Ouvrez l'interpréteur de commande 'cmd'
 2.  Exécuter cette commande:    git clone https://github.com/ezzine-montassar/Satellite_Data_Management_Interface
 3.  cd Satellite_Data_Management_Interface
-4.  pip install -r requirements.txt
-5.  Editez le fichier create_db.py pour l'adapter à vos exigences (Nom de la base, noms des tables, etc).
-6.  Créez la base de données:  python create_db.py
-7.  Ouvrez le fichier app.py en mode édition afin d’adapter l’adresse IP du serveur Flask ainsi que les noms de la base de données et des tables selon vos besoins.
-8.  Modifiez également les fichiers HTML si des changements sont apportés à la structure de la base (par exemple, la création de nouvelles tables).
-9.  Lancez le serveur:  python app.py
-10. Accédez à l’interface via l’adresse IP attribuée, en utilisant le port 5000 (ex. : http://192.168.1.1:5000).
+4.  Téléchargez une vidéo et la placez dans le répertoire 'static' pour l'utiliser comme arrière plan de l'interface (ex:  https://www.youtube.com/watch?v=fZIbLXr0iNk).
+5.  pip install -r requirements.txt
+6.  Editez le fichier create_db.py pour l'adapter à vos exigences (Nom de la base, noms des tables, etc).
+7.  Créez la base de données:  python create_db.py
+8.  Ouvrez le fichier app.py en mode édition afin d’adapter l’adresse IP du serveur Flask ainsi que les noms de la base de données et des tables selon vos besoins.
+9.  Modifiez également les fichiers HTML si des changements sont apportés à la structure de la base (par exemple, la création de nouvelles tables).
+10.  Lancez le serveur:  python app.py
+11. Accédez à l’interface via l’adresse IP attribuée, en utilisant le port 5000 (ex. : http://192.168.1.1:5000).
