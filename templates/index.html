@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataBase Web Interface - Interface de Gestion des Satellites</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+
+
+<body>
+
+<!-- Titre -->
+<h1 class="titre-skycontrol" >Sky Control</h1>
+
+
+
+<!-- La vidéo de fond -->
+<video autoplay muted loop id="bg-video">
+    <source src="{{ url_for('static', filename='bg2.mp4') }}" type="video/mp4">
+    Your browser does not support HTML5 video.
+</video>
+
+
+<main>
+
+    <div id="alert-popup" class="popup-overlay">
+        <div class="popup-content">
+            <p>
+                Veuillez choisir une fonctionnalité ci-dessous.
+                Le menu contient quatre options : La consultation des données insérées,
+                l’insertion de nouvelles données, la modification des données existantes et leur suppression
+            </p>
+            <button onclick="closePopup()">D'accord</button>
+        </div>
+    </div>
+
+
+    <!-- Menu des options -->
+    <div class="menu" id="menu">
+        <div class="carre consultation" onclick="showSection('consultation')">Consultation</div>
+        <div class="carre insertion" onclick="showSection('insertion')">Insertion</div>
+        <div class="carre suppression" onclick="showSection('suppression')">Suppression</div>
+        <div class="carre mise_a_jour" onclick="showSection('mise_a_jour')">Mise à jour</div>
+    </div>
+
+
+
+
+    <!-- Section Consultation -->
+    <div id="consultation" class="content consultation-section">
+
+    <!-- Les filtres -->
+
+        <form method="POST" class="formulaire" action="/filtrer">
+            <label>Tapez votre requête SQL ici:</label><br>
+            <textarea name="sql_query" placeholder="Ex: SELECT * FROM Satellites WHERE satellite_id = 20;" rows="4" cols="80" required></textarea><br>
+            <input type="submit" value="Exécuter">
+        </form>
+
+        <!-- Affichage des données filtrées -->
+        {% if filtered_result is defined %}
+        <h2>Résultat de la requête personnalisée</h2>
+        {% if filtered_result is string %}
+        <p style="color: red;">{{ filtered_result }}</p>
+        {% elif filtered_result|length == 0 %}
+        <p style="color: orange;">Aucun résultat trouvé.</p>
+        {% else %}
+        <table border="1">
+            <tr>
+                {% for column in filtered_result[0].keys() %}
+                <th>{{ column }}</th>
+                {% endfor %}
+            </tr>
+            {% for row in filtered_result %}
+            <tr>
+                {% for column in row.keys() %}
+                <td>{{ row[column] }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+        <br>
+        {% else %}
+        <!-- Affichage de toutes les tables (route /) -->
+        {% for table_name, rows in data.items() %}
+        <h2>{{ table_name }}</h2>
+
+        {% if rows is string %}
+        <p style="color: red;">{{ rows }}</p>
+        {% elif rows|length == 0 %}
+        <p style="color: orange;">Aucune donnée disponible pour cette table.</p>
+        {% else %}
+        <table border="1">
+            <tr>
+                {% for column in rows[0].keys() %}
+                <th>{{ column }}</th>
+                {% endfor %}
+            </tr>
+            {% for row in rows %}
+            <tr>
+                {% for column in row.keys() %}
+                <td>{{ row[column] }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+
+
+
+
+        <div class="button-group">
+            <button class="button_retour" onclick="showMenu(); window.location.href='/'">Retour</button>
+
+        </div>
+</div>
+
+
+
+
+
+    <!-- Section Insertion -->
+    <div id="insertion" class="content insertion-section">
+        <h1>Insertion de Données</h1>
+        <select class="button_select" id="Insertion-type" onchange="showFormInsertion()">
+            <option value="Agences_Spatiales">Agences_Spatiales</option>
+            <option value="Satellites">Satellites</option>
+            <option value="Instrument_Embarqués">Instrument_Embarqués</option>
+            <option value="Anomalie">Anomalie</option>
+            <option value="Missions">Missions</option>
+            <option value="Données_Satellites">Données_Satellites</option>
+            <option value="Zones">Zones</option>
+            <option value="Observation">Observation</option>
+            <option value="Stations_terrestres">Stations_terrestres</option>
+            <option value="Communication">Communication</option>
+            <option value="Sat_Telecom_Navigation">Sat_Telecom_Navigation</option>
+            <option value="Observation_De_Donnees">Observation_De_Données</option>
+            <option value="Sat_Recherche">Sat_Recherche</option>
+            <option value="Sat_Militaire">Sat_Militaire</option>
+
+        </select>
+
+
+        <!-- Formulaire Agences_Spatiales -->
+        <div id="Agences_SpatialesFormInsertion" >
+            <form method="POST" class ="formulaire" action="/insertion/AS">
+                <label>ID:</label>
+                <input type="text" id="ID_agence_insert" name="ID_agence_insert" required maxlength="50"><br>
+                <label>Nom:</label>
+                <input type="text" id="nom_agence_insert" name="nom_agence_insert" required maxlength="50"><br>
+                <label>Pays:</label>
+                <input type="text" id="pays_agence_insert" name="pays_agence_insert" required maxlength="50"><br>
+                <input type="submit" value="Insérer Agence Spatiale">
+            </form>
+        </div>
+
+
+        <!-- Formulaire Satellites -->
+        <div id="SatellitesFormInsertion" class="hidden" class="hidden">
+            <form method="POST" class="formulaire" action="/insertion/Sat">
+                <label>ID:</label>
+                <input type="text" id="ID_sat_insert" name="ID_sat_insert" required maxlength="50"><br>
+                <label>Parent_id:</label>
+                <input type="text" id="parent_id_sat_insert" name="parent_id_sat_insert" maxlength="50"><br>
+                <label>Agence id:</label>
+                <input type="text" id="agence_id_sat_insert" name="agence_id_sat_insert" required maxlength="50"><br>
+                <label>Type orbite:</label>
+                <select id="type_orbite_sat_insert" name="type_orbite_sat_insert" required>
+                    <option value="" disabled selected>-- Sélectionnez le type d'orbite --</option>
+                    <option value="LEO">LEO</option>
+                    <option value="MEO">MEO</option>
+                    <option value="GEO">GEO</option>
+                </select><br>
+                <label>Statut:</label>
+                <select id="statut_sat_insert" name="statut_sat_insert" required>
+                    <option value="" disabled selected>-- Sélectionnez le statut --</option>
+                    <option value="Opérationnel">Opérationnel</option>
+                    <option value="Inactif">Inactif</option>
+                    <option value="Défaillant">Défaillant</option>
+                </select><br>
+                <input type="submit" value="Insérer Satellite">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Instrument_Embarqués -->
+        <div id="Instrument_EmbarquésFormInsertion" class="hidden">
+            <form method="POST" class ="formulaire" action="/insertion/IE">
+                <label>ID:</label>
+                <input type="text" id="ID_instrument_insert" name="ID_instrument_insert" required maxlength="50"><br>
+                <label>Satellite ID:</label>
+                <input type="text" id="satellite_id_instrument_insert" name="satellite_id_instrument_insert" required maxlength="50"><br>
+                <label>Type:</label>
+                <input type="text" id="type_instrument_insert" name="type_instrument_insert" required maxlength="50"><br>
+                <label>Résolution:</label>
+                <input type="text" id="resolution_instrument_insert" name="resolution_instrument_insert" required maxlength="50"><br>
+                <label>Statut:</label>
+                <input type="text" id="statut_instrument_insert" name="statut_instrument_insert" required maxlength="50"><br>
+
+                <input type="submit" value="Insérer Instrument Embarquée">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Anomalie -->
+        <div id="AnomalieFormInsertion" class="hidden">
+            <form method="POST" class ="formulaire" action="/insertion/AN">
+                <label>ID:</label>
+                <input type="text" id="ID_anomalie_insert" name="ID_anomalie_insert" required maxlength="50"><br>
+                <label>Satellite ID:</label>
+                <input type="text" id="satellite_id_anomalie_insert" name="satellite_id_anomalie_insert" required maxlength="50"><br>
+                <label>Instrument ID:</label>
+                <input type="text" id="instr_id_anomalie_insert" name="instr_id_anomalie_insert"  maxlength="50"><br>
+                <label>Type:</label>
+                <input type="text" id="type_anomalie_insert" name="type_anomalie_insert" required maxlength="50"><br>
+                <label>Description:</label>
+                <input type="text" id="desc_anomalie_insert" name="desc_anomalie_insert" required maxlength="50"><br>
+                <label>Date de détection:</label>
+                <input type="date" id="date_detect_anomalie_insert" name="date_detect_anomalie_insert" required>
+                <label>Statut:</label>
+                <input type="text" id="statut_anomalie_insert" name="statut_anomalie_insert" required maxlength="50"><br>
+
+                <input type="submit" value="Insérer Anomalie">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Missions -->
+        <div id="MissionsFormInsertion" class="hidden">
+            <form method="POST" class ="formulaire" action="/insertion/MIS">
+                <label>ID:</label>
+                <input type="text" id="ID_mission_insert" name="ID_mission_insert" required maxlength="50"><br>
+                <label>Satellite ID:</label>
+                <input type="text" id="satellite_id_mission_insert" name="satellite_id_mission_insert" required maxlength="50"><br>
+                <label>Type de données:</label>
+                <input type="text" id="type_data_mission_insert" name="type_data_mission_insert" required maxlength="50"><br>
+                <label>Date de début:</label>
+                <input type="date" id="date_deb_mission_insert" name="date_deb_mission_insert" required>
+                <label>Date de fin:</label>
+                <input type="date" id="date_fin_mission_insert" name="date_fin_mission_insert" required>
+                <label>Priorité:</label>
+                <input type="text" id="pri_mission_insert" name="pri_mission_insert" required maxlength="50"><br>
+
+                <input type="submit" value="Insérer Mission">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Données_Satellites -->
+        <div id="Données_SatellitesFormInsertion" class="hidden">
+            <form method="POST" class ="formulaire" action="/insertion/DS">
+                <label>ID:</label>
+                <input type="text" id="ID_donnée_insert" name="ID_donnée_insert" required maxlength="50"><br>
+                <label>Mission ID:</label>
+                <input type="text" id="id_mission_donnée_insert" name="id_mission_donnée_insert" required maxlength="50"><br>
+                <label>Nom de fichier:</label>
+                <input type="text" id="fname_data_insert" name="fname_data_insert" required maxlength="50"><br>
+                <label>Chemin de stockage:</label>
+                <input type="text" id="path_data_insert" name="path_data_insert" required>
+                <label>Date d'ajout:</label>
+                <input type="date" id="date_ajout_data_insert" name="date_ajout_data_insert" required>
+
+                <input type="submit" value="Insérer Données_Satellites">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Zones -->
+        <div id="ZonesFormInsertion" class="hidden">
+            <form method="POST" class ="formulaire" action="/insertion/Z">
+                <label>ID:</label>
+                <input type="text" id="ID_zone_insert" name="ID_zone_insert" required maxlength="50"><br>
+                <label>Nom:</label>
+                <input type="text" id="nom_zone_insert" name="nom_zone_insert" required maxlength="50"><br>
+                <label>Pays:</label>
+                <input type="text" id="pays_zone_insert" name="pays_zone_insert" required maxlength="50"><br>
+                <label>Latitude:</label>
+                <input type="text" id="lat_zone_insert" name="lat_zone_insert" required>
+                <label>Longitude:</label>
+                <input type="text" id="long_zone_insert" name="long_zone_insert" required>
+
+                <input type="submit" value="Insérer Zone">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Observation -->
+        <div id="ObservationFormInsertion" class="hidden">
+            <form method="POST" class ="formulaire" action="/insertion/OBS">
+                <label>Satellite ID:</label>
+                <input type="text" id="ID_sat_obs_insert" name="ID_sat_obs_insert" required maxlength="50"><br>
+                <label>Zone ID:</label>
+                <input type="text" id="ID_zone_obs_insert" name="ID_zone_obs_insert" required maxlength="50"><br>
+
+                <input type="submit" value="Insérer Observation">
+            </form>
+        </div>
+
+
+        <!-- Formulaire Stations_terrestres -->
+        <div id="Stations_terrestresFormInsertion" class="hidden">
+            <form method="POST" class="formulaire" action="/insertion/STR">
+                <label>ID:</label>
+                <input type="text" id="ID_station_insert" name="ID_station_insert" required maxlength="50"><br>
+                <label>Nom:</label>
+                <input type="text" id="nom_station_insert" name="nom_station_insert" maxlength="50"><br>
+                <label>Pays:</label>
+                <input type="text" id="pays_station_insert" name="pays_station_insert" required maxlength="50"><br>
+
+                <input type="submit" value="Insérer Station Terrestre">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Communication -->
+        <div id="CommunicationFormInsertion" class="hidden" >
+            <form method="POST" class ="formulaire" action="/insertion/COM">
+                <label>Satellite ID:</label>
+                <input type="text" id="sat_id_com_insert" name="sat_id_com_insert" required maxlength="50"><br>
+                <label>Station ID:</label>
+                <input type="text" id="station_id_com_insert" name="station_id_com_insert" required maxlength="50"><br>
+
+                <input type="submit" value="Insérer Communication">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Sat_Telecom_Navigation -->
+        <div id="Sat_Telecom_NavigationFormInsertion" class="hidden">
+            <form method="POST" class ="formulaire" action="/insertion/STN">
+                <label>Satellite ID:</label>
+                <input type="text" id="sat_id_stn_insert" name="sat_id_stn_insert" required maxlength="50"><br>
+                <label>Bande fréquence:</label>
+                <input type="text" id="bf_stn_insert" name="bf_stn_insert"  maxlength="50"><br>
+                <label>Capacitéde transmission:</label>
+                <input type="text" id="ctr_stn_insert" name="ctr_stn_insert" required maxlength="50"><br>
+                <label>Précision de la localisation:</label>
+                <input type="text" id="prloc_stn_insert" name="prloc_stn_insert" required maxlength="50"><br>
+
+                <input type="submit" value="Insérer Sat_Telecom_Navigation">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Observation_De_Donnees -->
+        <div id="Observation_De_DonneesFormInsertion" class="hidden">
+            <form method="POST" class ="formulaire" action="/insertion/ODD">
+                <label>Satellite ID:</label>
+                <input type="text" id="sat_id_odd_insert" name="sat_id_odd_insert" required maxlength="50"><br>
+                <label>Résolution spéctrale:</label>
+                <input type="text" id="res_spc_odd_insert" name="res_spc_odd_insert" required maxlength="50"><br>
+                <label>Fréquence passage:</label>
+                <input type="date" id="freq_pass_odd_insert" name="freq_pass_odd_insert" required>
+                <label>Type d'image:</label>
+                <input type="text" id="type_img_odd_insert" name="type_img_odd_insert" required maxlength="50"><br>
+
+                <input type="submit" value="Insérer Observation De Donnees">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Sat_Recherche -->
+        <div id="Sat_RechercheFormInsertion" class="hidden">
+            <form method="POST" class ="formulaire" action="/insertion/SR">
+                <label>Satellite ID:</label>
+                <input type="text" id="id_sat_SR_insert" name="id_sat_SR_insert" required maxlength="50"><br>
+                <label>Domaine de recherche:</label>
+                <input type="text" id="dom_SR_insert" name="dom_SR_insert" required maxlength="50"><br>
+                <label>Type d'instrumentation:</label>
+                <input type="text" id="type_instr_SR_insert" name="type_instr_SR_insert" required>
+                <label>Précision de mesure:</label>
+                <input type="text" id="prec_mes_SR_insert" name="prec_mes_SR_insert" required>
+
+                <input type="submit" value="Insérer Sat_Recherche">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Sat_Militaire -->
+        <div id="Sat_MilitaireFormInsertion" class="hidden">
+            <form method="POST" class ="formulaire" action="/insertion/SM">
+                <label>Satellite ID:</label>
+                <input type="text" id="sat_id_SM_insert" name="sat_id_SM_insert" required maxlength="50"><br>
+                <label>Niveau de sécurité:</label>
+                <input type="text" id="niv_sec_SM_insert" name="niv_sec_SM_insert" required maxlength="50"><br>
+                <label>Cryptage:</label>
+                <input type="text" id="crypt_SM_insert" name="crypt_SM_insert" required maxlength="50"><br>
+                <label>Type de mission:</label>
+                <input type="text" id="type_miss_SM_insert" name="type_miss_SM_insert" required>
+
+
+                <input type="submit" value="Insérer Sat_Militaire">
+            </form>
+        </div>
+
+
+
+
+        <div class="button-group">
+            <button class="button_retour" onclick="showMenu()">Retour</button>
+        </div>
+    </div>
+
+
+
+    <!-- Section Suppression -->
+    <div id="suppression" class="content suppression-section">
+        <h1>Suppression de Données</h1>
+        <p class="paragraphe_suppression">La suppression se fait seulement par l'identifiant unique ou double selon le type !</p>
+        <form id="SuppressionForm" method="POST" class="formulaire" action="/supprimer">
+            <label for="type-suppression">Type :</label>
+            <select id="type-suppression" name="type-suppression" onchange="toggleIDFields()">
+                <option value="Agences_Spatiales">Agences_Spatiales</option>
+                <option value="Satellites">Satellites</option>
+                <option value="Instrument_Embarqués">Instrument_Embarqués</option>
+                <option value="Anomalie">Anomalie</option>
+                <option value="Missions">Missions</option>
+                <option value="Données_Satellites">Données_Satellites</option>
+                <option value="Zones">Zones</option>
+                <option value="Observation">Observation</option>
+                <option value="Stations_terrestres">Stations_terrestres</option>
+                <option value="Communication">Communication</option>
+                <option value="Sat_Telecom_Navigation">Sat_Telecom_Navigation</option>
+                <option value="Observation_De_Donnees">Observation_De_Donnees</option>
+                <option value="Sat_Recherche">Sat_Recherche</option>
+                <option value="Sat_Militaire">Sat_Militaire</option>
+            </select>
+
+            <!-- Champ pour les tables à ID simple -->
+            <div id="single-id-field">
+                <label for="ID_Suppression">ID :</label>
+                <input type="text" id="ID_Suppression" name="ID_Suppression"  maxlength="50">
+            </div>
+
+            <!-- Champs pour les tables à ID composé -->
+            <div id="composite-id-fields" style="display:none;">
+                <label for="ID1_Suppression">ID 1 :</label>
+                <input type="text" id="ID1_Suppression" name="ID1_Suppression"  maxlength="50">
+                <label for="ID2_Suppression">ID 2 :</label>
+                <input type="text" id="ID2_Suppression" name="ID2_Suppression"  maxlength="50">
+            </div>
+
+            <input type="submit" value="Supprimer">
+        </form>
+
+        <div class="button-group">
+            <button class="button_retour" onclick="showMenu()">Retour</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleIDFields() {
+            const selectedTable = document.getElementById("type-suppression").value;
+            const singleID = document.getElementById("single-id-field");
+            const compositeIDs = document.getElementById("composite-id-fields");
+
+            const idSimple = document.getElementById("ID_Suppression");
+            const id1 = document.getElementById("ID1_Suppression");
+            const id2 = document.getElementById("ID2_Suppression");
+
+            if (selectedTable === "Observation" || selectedTable === "Communication") {
+                singleID.style.display = "none";
+                compositeIDs.style.display = "block";
+                idSimple.value = "";
+                idSimple.removeAttribute("required");
+                id1.setAttribute("required", "required");
+                id2.setAttribute("required", "required");
+            } else {
+                singleID.style.display = "block";
+                compositeIDs.style.display = "none";
+                id1.value = "";
+                id2.value = "";
+                id1.removeAttribute("required");
+                id2.removeAttribute("required");
+                idSimple.setAttribute("required", "required");
+            }
+        }
+
+        // Appel initial pour appliquer les bons champs à l'ouverture de la page
+        window.onload = toggleIDFields;
+    </script>
+
+
+
+
+
+    <!-- Confirmation de la Suppression -->
+    <script>
+        document.getElementById("SuppressionForm").addEventListener("submit", function(event) {
+            const type = document.getElementById("type-suppression").value;
+            const id = document.getElementById("ID_Suppression").value;
+            const confirmation = confirm(`Êtes-vous sûr de vouloir supprimer l'entrée de type "${type}" avec l'ID "${id}" ?`);
+            if (!confirmation) {
+                event.preventDefault(); // empêche l'envoi du formulaire
+            }
+        });
+    </script>
+
+
+
+
+
+
+    <!-- Section de Mise à jour -->
+    <div id="mise_a_jour" class="content mise_a_jour-section">
+        <h1>Mise à jour Des données</h1>
+        <select class="button_select" id="mise_a_jour_type" onchange="showFormmise_a_jour()">
+            <option value="Agences_Spatiales">Agences_Spatiales</option>
+            <option value="Satellites">Satellites</option>
+            <option value="Instrument_Embarqués">Instrument_Embarqués</option>
+            <option value="Anomalie">Anomalie</option>
+            <option value="Missions">Missions</option>
+            <option value="Données_Satellites">Données_Satellites</option>
+            <option value="Zones">Zones</option>
+            <option value="Stations_terrestres">Stations_terrestres</option>
+            <option value="Sat_Telecom_Navigation">Sat_Telecom_Navigation</option>
+            <option value="Observation_De_Donnees">Observation_De_Donnees</option>
+            <option value="Sat_Recherche">Sat_Recherche</option>
+            <option value="Sat_Militaire">Sat_Militaire</option>
+        </select>
+
+
+        <!-- Formulaire Agences_Spatiales -->
+        <div id="Agences_SpatialesFormModification" >
+            <form method="POST" class ="formulaire" action="/modification/AS" onsubmit="return confirmerModification()">
+                <label>ID:</label>
+                <input type="text" id="ID_agence_mod" name="ID_agence_mod" required maxlength="50"><br>
+                <label>Nom:</label>
+                <input type="text" id="nom_agence_mod" name="nom_agence_mod"  maxlength="50"><br>
+                <label>Pays:</label>
+                <input type="text" id="pays_agence_mod" name="pays_agence_mod"  maxlength="50"><br>
+                <input type="submit" value="Modifier Agence Spatiale">
+            </form>
+        </div>
+
+
+        <!-- Formulaire Satellites -->
+        <div id="SatellitesFormModification" class="hidden" class="hidden">
+            <form method="POST" class="formulaire" action="/modification/Sat" onsubmit="return confirmerModification()">
+                <label>ID:</label>
+                <input type="text" id="ID_sat_mod" name="ID_sat_mod" required maxlength="50"><br>
+                <label>Parent_id:</label>
+                <input type="text" id="parent_id_sat_mod" name="parent_id_sat_mod" maxlength="50"><br>
+                <label>Agence id:</label>
+                <input type="text" id="agence_id_sat_mod" name="agence_id_sat_mod"  maxlength="50"><br>
+                <label>Type orbite:</label>
+                <select id="type_orbite_sat_mod" name="type_orbite_sat_mod" >
+                    <option value="" disabled selected>-- Sélectionnez le type d'orbite --</option>
+                    <option value="LEO">LEO</option>
+                    <option value="MEO">MEO</option>
+                    <option value="GEO">GEO</option>
+                </select><br>
+                <label>Statut:</label>
+                <select id="statut_sat_mod" name="statut_sat_mod" >
+                    <option value="" disabled selected>-- Sélectionnez le statut --</option>
+                    <option value="Opérationnel">Opérationnel</option>
+                    <option value="Inactif">Inactif</option>
+                    <option value="Défaillant">Défaillant</option>
+                </select><br>
+                <input type="submit" value="Modifier Satellite">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Instrument_Embarqués -->
+        <div id="Instrument_EmbarquésFormModification" class="hidden">
+            <form method="POST" class ="formulaire" action="/modification/IE" onsubmit="return confirmerModification()">
+                <label>ID:</label>
+                <input type="text" id="ID_instrument_mod" name="ID_instrument_mod" required maxlength="50"><br>
+                <label>Satellite ID:</label>
+                <input type="text" id="satellite_id_instrument_mod" name="satellite_id_instrument_mod" maxlength="50"><br>
+                <label>Type:</label>
+                <input type="text" id="type_instrument_mod" name="type_instrument_mod"  maxlength="50"><br>
+                <label>Résolution:</label>
+                <input type="text" id="resolution_instrument_mod" name="resolution_instrument_mod" maxlength="50"><br>
+                <label>Statut:</label>
+                <input type="text" id="statut_instrument_mod" name="statut_instrument_mod"  maxlength="50"><br>
+
+                <input type="submit" value="Modifier Instrument Embarquée">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Anomalie -->
+        <div id="AnomalieFormModification" class="hidden">
+            <form method="POST" class ="formulaire" action="/modification/AN" onsubmit="return confirmerModification()">
+                <label>ID:</label>
+                <input type="text" id="ID_anomalie_mod" name="ID_anomalie_mod" required maxlength="50"><br>
+                <label>Satellite ID:</label>
+                <input type="text" id="satellite_id_anomalie_mod" name="satellite_id_anomalie_mod" maxlength="50"><br>
+                <label>Instrument ID:</label>
+                <input type="text" id="instr_id_anomalie_mod" name="instr_id_anomalie_mod"  maxlength="50"><br>
+                <label>Type:</label>
+                <input type="text" id="type_anomalie_mod" name="type_anomalie_mod"  maxlength="50"><br>
+                <label>Description:</label>
+                <input type="text" id="desc_anomalie_mod" name="desc_anomalie_mod" maxlength="50"><br>
+                <label>Date de détection:</label>
+                <input type="date" id="date_detect_anomalie_mod" name="date_detect_anomalie_mod" >
+                <label>Statut:</label>
+                <input type="text" id="statut_anomalie_mod" name="statut_anomalie_mod"  maxlength="50"><br>
+
+                <input type="submit" value="Modifier Anomalie">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Missions -->
+        <div id="MissionsFormModification" class="hidden">
+            <form method="POST" class ="formulaire" action="/modification/MIS" onsubmit="return confirmerModification()">
+                <label>ID:</label>
+                <input type="text" id="ID_mission_mod" name="ID_mission_mod" required maxlength="50"><br>
+                <label>Satellite ID:</label>
+                <input type="text" id="satellite_id_mission_mod" name="satellite_id_mission_mod"  maxlength="50"><br>
+                <label>Type de données:</label>
+                <input type="text" id="type_data_mission_mod" name="type_data_mission_mod"  maxlength="50"><br>
+                <label>Date de début:</label>
+                <input type="date" id="date_deb_mission_mod" name="date_deb_mission_mod" >
+                <label>Date de fin:</label>
+                <input type="date" id="date_fin_mission_mod" name="date_fin_mission_mod" >
+                <label>Priorité:</label>
+                <input type="text" id="pri_mission_mod" name="pri_mission_mod"  maxlength="50"><br>
+
+                <input type="submit" value="Modifier Mission">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Données_Satellites -->
+        <div id="Données_SatellitesFormModification" class="hidden">
+            <form method="POST" class ="formulaire" action="/modification/DS" onsubmit="return confirmerModification()">
+                <label>ID:</label>
+                <input type="text" id="ID_donnée_mod" name="ID_donnée_mod" required maxlength="50"><br>
+                <label>Mission ID:</label>
+                <input type="text" id="id_mission_donnée_mod" name="id_mission_donnée_mod"  maxlength="50"><br>
+                <label>Nom de fichier:</label>
+                <input type="text" id="fname_data_mod" name="fname_data_mod" maxlength="50"><br>
+                <label>Chemin de stockage:</label>
+                <input type="text" id="path_data_mod" name="path_data_mod" >
+                <label>Date d'ajout:</label>
+                <input type="date" id="date_ajout_data_mod" name="date_ajout_data_mod" >
+
+                <input type="submit" value="Modifier Données_Satellites">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Zones -->
+        <div id="ZonesFormModification" class="hidden">
+            <form method="POST" class ="formulaire" action="/modification/Z" onsubmit="return confirmerModification()">
+                <label>ID:</label>
+                <input type="text" id="ID_zone_mod" name="ID_zone_mod" required maxlength="50"><br>
+                <label>Nom:</label>
+                <input type="text" id="nom_zone_mod" name="nom_zone_mod"  maxlength="50"><br>
+                <label>Pays:</label>
+                <input type="text" id="pays_zone_mod" name="pays_zone_mod"  maxlength="50"><br>
+                <label>Latitude:</label>
+                <input type="text" id="lat_zone_mod" name="lat_zone_mod" >
+                <label>Longitude:</label>
+                <input type="text" id="long_zone_mod" name="long_zone_mod" >
+
+                <input type="submit" value="Modifier Zone">
+            </form>
+        </div>
+
+
+        <!-- Formulaire Stations_terrestres -->
+        <div id="Stations_terrestresFormModification" class="hidden">
+            <form method="POST" class="formulaire" action="/modification/STR" onsubmit="return confirmerModification()">
+                <label>ID:</label>
+                <input type="text" id="ID_station_mod" name="ID_station_mod" required maxlength="50"><br>
+                <label>Nom:</label>
+                <input type="text" id="nom_station_mod" name="nom_station_mod" maxlength="50"><br>
+                <label>Pays:</label>
+                <input type="text" id="pays_station_mod" name="pays_station_mod"  maxlength="50"><br>
+
+                <input type="submit" value="Modifier Station Terrestre">
+            </form>
+        </div>
+
+
+        <!-- Formulaire Sat_Telecom_Navigation -->
+        <div id="Sat_Telecom_NavigationFormModification" class="hidden">
+            <form method="POST" class ="formulaire" action="/modification/STN" onsubmit="return confirmerModification()">
+                <label>Satellite ID:</label>
+                <input type="text" id="sat_id_stn_mod" name="sat_id_stn_mod" required maxlength="50"><br>
+                <label>Bande fréquence:</label>
+                <input type="text" id="bf_stn_mod" name="bf_stn_mod"  maxlength="50"><br>
+                <label>Capacitéde transmission:</label>
+                <input type="text" id="ctr_stn_mod" name="ctr_stn_mod" maxlength="50"><br>
+                <label>Précision de la localisation:</label>
+                <input type="text" id="prloc_stn_mod" name="prloc_stn_mod"  maxlength="50"><br>
+
+                <input type="submit" value="Modifier Sat_Telecom_Navigation">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Observation_De_Donnees -->
+        <div id="Observation_De_DonneesFormModification" class="hidden">
+            <form method="POST" class ="formulaire" action="/modification/ODD" onsubmit="return confirmerModification()">
+                <label>Satellite ID:</label>
+                <input type="text" id="sat_id_odd_mod" name="sat_id_odd_mod" required maxlength="50"><br>
+                <label>Résolution spéctrale:</label>
+                <input type="text" id="res_spc_odd_mod" name="res_spc_odd_mod" maxlength="50"><br>
+                <label>Fréquence passage:</label>
+                <input type="date" id="freq_pass_odd_mod" name="freq_pass_odd_mod" >
+                <label>Type d'image:</label>
+                <input type="text" id="type_img_odd_mod" name="type_img_odd_mod"  maxlength="50"><br>
+
+                <input type="submit" value="Modifier Observation De Donnees">
+            </form>
+        </div>
+
+
+        <!-- Formulaire Sat_Recherche -->
+        <div id="Sat_RechercheFormModification" class="hidden">
+            <form method="POST" class ="formulaire" action="/modification/SR" onsubmit="return confirmerModification()">
+                <label>Satellite ID:</label>
+                <input type="text" id="id_sat_SR_mod" name="id_sat_SR_mod" required maxlength="50"><br>
+                <label>Domaine de recherche:</label>
+                <input type="text" id="dom_SR_mod" name="dom_SR_mod"  maxlength="50"><br>
+                <label>Type d'instrumentation:</label>
+                <input type="text" id="type_instr_SR_mod" name="type_instr_SR_mod" >
+                <label>Précision de mesure:</label>
+                <input type="text" id="prec_mes_SR_mod" name="prec_mes_SR_mod" >
+
+                <input type="submit" value="Modifier Sat_Recherche">
+            </form>
+        </div>
+
+
+
+        <!-- Formulaire Sat_Militaire -->
+        <div id="Sat_MilitaireFormModification" class="hidden">
+            <form method="POST" class ="formulaire" action="/modification/SM" onsubmit="return confirmerModification()">
+                <label>Satellite ID:</label>
+                <input type="text" id="sat_id_SM_mod" name="sat_id_SM_mod" required maxlength="50"><br>
+                <label>Niveau de sécurité:</label>
+                <input type="text" id="niv_sec_SM_mod" name="niv_sec_SM_mod"  maxlength="50"><br>
+                <label>Cryptage:</label>
+                <input type="text" id="crypt_SM_mod" name="crypt_SM_mod"  maxlength="50"><br>
+                <label>Type de mission:</label>
+                <input type="text" id="type_miss_SM_mod" name="type_miss_SM_mod" >
+
+
+                <input type="submit" value="Modifier Sat_Militaire">
+            </form>
+        </div>
+
+
+
+
+
+
+
+        <div class="button-group">
+            <button class="button_retour" onclick="showMenu()">Retour</button>
+        </div>
+    </div>
+
+
+</main>
+
+<footer>
+
+    <img src="{{ url_for('static', filename='supcom_logo.jpg') }}" alt="Logo JCI" class="logo-transparent">
+    <p class="description">Ce projet a été réalisé par EZZINE Montassar, MAHMOUD Hassen et CHABCHOUB Taha Nour, dans le cadre d’un travail de base de données mené au cours du quatrième période de l’année scolaire 2024-2025, à SUP’COM.</p>
+</footer>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
